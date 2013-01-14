@@ -3,6 +3,20 @@
 #include <alsa/asoundlib.h>
 using namespace std;
 
+void addToRawmidiDeviceList(snd_ctl_t* cardHandle){
+    int err, devnum = -1, totalDevices = 0;
+    while(1){
+        if((err = snd_ctl_rawmidi_next_device(cardHandle, &devnum)) < 0){
+            cout<<"Error fetching next midi device "<<snd_strerror(err)<<endl;
+            break;
+        }
+
+        if(devnum < 0) break;
+        ++totalDevices;
+    }
+    cout<<"We found "<<totalDevices<<" midi device(s)"<<endl;
+}
+
 void printCardInfo(int cardNum){
 	char str[255];
 	sprintf(str, "hw:%d", cardNum);
@@ -21,6 +35,9 @@ void printCardInfo(int cardNum){
 			cout<<"Can't get info for card "<<cardNum<<" : " << snd_strerror(err) <<endl;
 		else
 			cout<<"Card "<<cardNum<<" : "<< snd_ctl_card_info_get_name(cardInfo) <<endl;
+
+        //Let's add that to midi device list
+        addToRawmidiDeviceList(cardHandle);
 
 		// Close the card's control interface after we're done with it
 		snd_ctl_close(cardHandle);
@@ -49,6 +66,7 @@ void countCards(){
 	// to unload the info and free up that mem
 	snd_config_update_free_global(); 
 }
+
 
 int main(){
     cout<<"Noise cancellation program!"<<endl;
